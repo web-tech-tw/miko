@@ -1,7 +1,14 @@
 "use strict";
 
-const {isProduction} = require("../config");
-const {APP_NAME} = require("../init/const");
+const {getEnabled, getMust} = require("../config");
+
+const {
+    APP_NAME,
+    APP_DESCRIPTION,
+    APP_VERSION,
+    APP_AUTHOR_NAME,
+    APP_AUTHOR_URL,
+} = require("../init/const");
 
 const {useApp, express} = require("../init/express");
 const {join: pathJoin} = require("path");
@@ -16,11 +23,24 @@ const options = {
         openapi: "3.0.0",
         info: {
             title: APP_NAME,
-            version: "latest",
-            description: "A tiny but powerful microservice framework.",
+            version: APP_VERSION,
+            description: APP_DESCRIPTION,
             contact: {
-                name: "Taiwan Web Technology Promotion Organization",
-                url: "https://web-tech-tw.github.io",
+                name: APP_AUTHOR_NAME,
+                url: APP_AUTHOR_URL,
+            },
+        },
+        servers: [{
+            description: getMust("SWAGGER_SERVER_DESCRIPTION"),
+            url: getMust("SWAGGER_SERVER_URL"),
+        }],
+        components: {
+            securitySchemes: {
+                ApiKeyAuth: {
+                    type: "apiKey",
+                    in: "header",
+                    name: "Authorization",
+                },
             },
         },
     },
@@ -38,8 +58,8 @@ router.use("/", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 // Export routes mapper (function)
 module.exports = () => {
-    // Skip if production
-    if (isProduction()) {
+    // Skip if swagger disabled
+    if (!getEnabled("ENABLED_SWAGGER")) {
         return;
     }
 
